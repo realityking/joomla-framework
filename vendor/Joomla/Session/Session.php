@@ -6,15 +6,9 @@
 
 namespace Joomla\Session;
 
-
 // @todo dependency on legacy JApplication here
-use Joomla\Application\Route;
-use Joomla\Event\Dispatcher;
 use Joomla\Input\Input;
 use Joomla\Factory;
-use DirectoryIterator;
-use IteratorAggregate;
-use ArrayIterator;
 
 /**
  * Class for managing HTTP sessions
@@ -26,7 +20,7 @@ use ArrayIterator;
  *
  * @since  1.0
  */
-class Session implements IteratorAggregate
+class Session implements \IteratorAggregate
 {
 	/**
 	 * Internal state.
@@ -47,12 +41,12 @@ class Session implements IteratorAggregate
 	protected $expire = 15;
 
 	/**
-	 * The session store object.
+	 * The session handler object.
 	 *
-	 * @var    Storage
+	 * @var    SessionHandlerInterface
 	 * @since  1.0
 	 */
-	protected $store = null;
+	protected $handler = null;
 
 	/**
 	 * Security policy.
@@ -83,12 +77,6 @@ class Session implements IteratorAggregate
 	protected static $instance;
 
 	/**
-	 * @var    string
-	 * @since  1.0
-	 */
-	protected $storeName;
-
-	/**
 	 * Holds the JInput object
 	 *
 	 * @var    Input
@@ -97,22 +85,14 @@ class Session implements IteratorAggregate
 	private $input = null;
 
 	/**
-	 * Holds the event dispatcher object
-	 *
-	 * @var    Dispatcher
-	 * @since  1.0
-	 */
-	private $dispatcher = null;
-
-	/**
 	 * Constructor
 	 *
-	 * @param   string  $store    The type of storage for the session.
-	 * @param   array   $options  Optional parameters
+	 * @param   SessionHanlderInterface  $store    The type of storage for the session. null for PHP default.
+	 * @param   array                    $options  Optional parameters
 	 *
 	 * @since   1.0
 	 */
-	public function __construct($store = 'none', array $options = array())
+	public function __construct(\SessionHandlerInterface $handler = null, array $options = array())
 	{
 		// Need to destroy any existing sessions started with session.auto_start
 		if (session_id())
@@ -127,12 +107,9 @@ class Session implements IteratorAggregate
 		// Only allow the session ID to come from cookies and nothing else.
 		ini_set('session.use_only_cookies', '1');
 
-		// Create handler
-		$this->store = Storage::getInstance($store, $options);
+		$this->handler = $handler;
+		$this->registerSessionHandler($this->handler);
 
-		$this->storeName = $store;
-
-		// Set options
 		$this->_setOptions($options);
 
 		$this->_setCookieParams();
@@ -151,16 +128,43 @@ class Session implements IteratorAggregate
 	 */
 	public function __get($name)
 	{
-		if ($name === 'storeName')
+		if ($name === 'state' || $name === 'expire')
 		{
 			return $this->$name;
 		}
+	}
 
-		if ($name === 'state' || $name === 'expire')
+	/**
+	 * Register a session handler.
+	 *
+	 * @param   \SessionHandlerInterface  $handler  The session hanlder. null for PHP default.
+	 *
+	 * @return  void
+	 *
+	 * @note    This is a workaround for a PHP 5.3 limitiation and should be removed once PHP 5.4 is the lowest supported version.
+	 */
+	protected function registerSessionHandler(\SessionHandlerInterface $handler = null)
+	{
+		if (!is_null($handler))
 		{
-			$property = '_' . $name;
-
-			return $this->$property;
+			if (version_compare(PHP_VERSION, '5.4.0', '<'))
+			{
+				// Manually register the inidividual methods as the session handler
+				session_set_save_handler(
+					array($handler, 'open'),
+					array($handler, 'close'),
+					array($handler, 'read'),
+					array($handler, 'write'),
+					array($handler, 'destroy'),
+					array($handler, 'gc')
+				);
+			}
+			else
+			{
+				// Since PHP 5.4 we can just register the whole object
+				// The shutdown function already gets registered in ::_start(), so we don't register it again here.
+				session_set_save_handler($handler, false);
+			}
 		}
 	}
 
@@ -267,72 +271,15 @@ class Session implements IteratorAggregate
 	}
 
 	/**
-	 * Method to determine a hash for anti-spoofing variable names
-	 *
-	 * @param   boolean  $forceNew  If true, force a new token to be created
-	 *
-	 * @return  string  Hashed var name
-	 *
-	 * @since   1.0
-	 */
-	public static function getFormToken($forceNew = false)
-	{
-		// @todo we need the user id somehow here
-		$userId  = 0;
-		$session = Factory::getSession();
-
-		$hash = md5(Factory::getApplication()->get('secret') . $userId . $session->getToken($forceNew));
-
-		return $hash;
-	}
-
-	/**
 	 * Retrieve an external iterator.
 	 *
-	 * @return  ArrayIterator  Return an ArrayIterator of $_SESSION.
+	 * @return  \ArrayIterator  Return an ArrayIterator of $_SESSION.
 	 *
 	 * @since   1.0
 	 */
 	public function getIterator()
 	{
-		return new ArrayIterator($_SESSION);
-	}
-
-	/**
-	 * Checks for a form token in the request.
-	 *
-	 * Use in conjunction with JHtml::_('form.token') or JSession::getFormToken.
-	 *
-	 * @param   string  $method  The request method in which to look for the token key.
-	 *
-	 * @return  boolean  True if found and valid, false otherwise.
-	 *
-	 * @since   1.0
-	 */
-	public static function checkToken($method = 'post')
-	{
-		$token = self::getFormToken();
-		$app = Factory::getApplication();
-
-		if (!$app->input->$method->get($token, '', 'alnum'))
-		{
-			$session = Factory::getSession();
-
-			if ($session->isNew())
-			{
-				// Redirect to login screen.
-				$app->redirect(Route::_('index.php'));
-				$app->close();
-			}
-			else
-			{
-				return false;
-			}
-		}
-		else
-		{
-			return true;
-		}
+		return new \ArrayIterator($_SESSION);
 	}
 
 	/**
@@ -371,50 +318,6 @@ class Session implements IteratorAggregate
 	}
 
 	/**
-	 * Get the session handlers
-	 *
-	 * @return  array  An array of available session handlers
-	 *
-	 * @since   1.0
-	 */
-	public static function getStores()
-	{
-		$connectors = array();
-
-		// Get an iterator and loop trough the driver classes.
-		$iterator = new DirectoryIterator(__DIR__ . '/Storage');
-
-		foreach ($iterator as $file)
-		{
-			$fileName = $file->getFilename();
-
-			// Only load for php files.
-			if (!$file->isFile() || $file->getExtension() != 'php')
-			{
-				continue;
-			}
-
-			// Derive the class name from the type.
-			$class = str_ireplace('.php', '', '\\Joomla\\Session\\Storage\\' . ucfirst(trim($fileName)));
-
-			// If the class doesn't exist we have nothing left to do but look at the next type. We did our best.
-			if (!class_exists($class))
-			{
-				continue;
-			}
-
-			// Sweet!  Our class exists, so now we just need to know if it passes its test method.
-			if ($class::isSupported())
-			{
-				// Connector names should not have file extensions.
-				$connectors[] = str_ireplace('.php', '', $fileName);
-			}
-		}
-
-		return $connectors;
-	}
-
-	/**
 	 * Shorthand to check if the session is active
 	 *
 	 * @return  boolean
@@ -444,16 +347,14 @@ class Session implements IteratorAggregate
 	 * Check whether this session is currently created
 	 *
 	 * @param   Input       $input       Input object for the session to use.
-	 * @param   Dispatcher  $dispatcher  Dispatcher object for the session to use.
 	 *
 	 * @return  void.
 	 *
 	 * @since   1.0
 	 */
-	public function initialise(Input $input, Dispatcher $dispatcher = null)
+	public function initialise(Input $input)
 	{
 		$this->input      = $input;
-		$this->dispatcher = $dispatcher;
 	}
 
 	/**
@@ -604,11 +505,6 @@ class Session implements IteratorAggregate
 
 		// Perform security checks
 		$this->_validate();
-
-		if ($this->dispatcher instanceof Dispatcher)
-		{
-			$this->dispatcher->trigger('onAfterSessionStart');
-		}
 	}
 
 	/**
@@ -650,10 +546,15 @@ class Session implements IteratorAggregate
 		 * Write and Close handlers are called after destructing objects since PHP 5.0.5.
 		 * Thus destructors can use sessions but session handler can't use objects.
 		 * So we are moving session closure before destructing objects.
-		 *
-		 * Replace with session_register_shutdown() when dropping compatibility with PHP 5.3
 		 */
-		register_shutdown_function('session_write_close');
+		if (version_compare(PHP_VERSION, '5.4.0', '<'))
+		{
+			register_shutdown_function('session_write_close');
+        }
+		else
+		{
+            session_register_shutdown();
+        }
 
 		session_cache_limiter('none');
 		session_start();
@@ -689,10 +590,11 @@ class Session implements IteratorAggregate
 		 */
 		if (isset($_COOKIE[session_name()]))
 		{
-			$config = Factory::getConfig();
-			$cookie_domain = $config->get('cookie_domain', '');
-			$cookie_path = $config->get('cookie_path', '/');
-			setcookie(session_name(), '', time() - 42000, $cookie_path, $cookie_domain);
+			$params = session_get_cookie_params();
+			
+			setcookie(session_name(), '', time() - 42000, $params["path"],
+				$params["domain"], $params["secure"], $params["httponly"]
+			);
 		}
 
 		session_unset();
@@ -722,7 +624,7 @@ class Session implements IteratorAggregate
 		}
 
 		// Re-register the session handler after a session has been destroyed, to avoid PHP bug
-		$this->store->register();
+		$this->registerSessionHandler($this->handler);
 
 		$this->state = 'restart';
 
@@ -762,7 +664,7 @@ class Session implements IteratorAggregate
 		session_destroy();
 
 		// Re-register the session store after a session has been destroyed, to avoid PHP bug
-		$this->store->register();
+		$this->registerSessionHandler($this->handler);
 
 		// Restore config
 		session_set_cookie_params($cookie['lifetime'], $cookie['path'], $cookie['domain'], $cookie['secure'], true);
