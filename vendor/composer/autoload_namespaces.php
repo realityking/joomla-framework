@@ -6,6 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Symfony\\Component\\EventDispatcher\\' => $vendorDir . '/symfony/event-dispatcher/',
     'Psr\\Log\\' => $vendorDir . '/psr/log/',
     'Psr' => $baseDir . '/vendor/psr/cache',
     'Joomla' => $baseDir . '/src/',
