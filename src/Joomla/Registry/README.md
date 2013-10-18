@@ -2,8 +2,9 @@
 
 ``` php
 use Joomla\Registry\Registry;
+use Joomla\Registry\RegistryFactory;
 
-$registry = new Registry;
+$registry = RegistryFactory::getRegistry();
 
 // Set a value in the registry.
 $registry->set('foo') = 'bar';
@@ -17,8 +18,9 @@ $value = $registry->get('foo');
 
 ``` php
 use Joomla\Registry\Registry;
+use Joomla\Registry\RegistryFactory;
 
-$registry = new Registry;
+$registry = new RegistryFactory::getRegistry();
 
 // Load by string
 $registry->loadString('{"foo" : "bar"}');
