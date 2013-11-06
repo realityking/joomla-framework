@@ -8,7 +8,6 @@
 
 namespace Joomla\Facebook;
 
-use Joomla\Registry\Registry;
 use Joomla\Http\Http;
 
 /**
@@ -19,112 +18,115 @@ use Joomla\Http\Http;
 class Facebook
 {
 	/**
-	 * @var    Joomla\Registry\Registry  Options for the Facebook object.
+	 * @var    array  Options for the Facebook object.
 	 * @since  1.0
 	 */
 	protected $options;
 
 	/**
-	 * @var    Joomla\Http\Http  The HTTP client object to use in sending HTTP requests.
+	 * @var    \Joomla\Http\Http  The HTTP client object to use in sending HTTP requests.
 	 * @since  1.0
 	 */
 	protected $client;
 
 	/**
-	 * @var    Joomla\Facebook\OAuth  The OAuth client.
+	 * @var    \Joomla\Facebook\OAuth  The OAuth client.
 	 * @since  1.0
 	 */
 	protected $oauth;
 
 	/**
-	 * @var    Joomla\Facebook\User  Facebook API object for user.
+	 * @var    \Joomla\Facebook\User  Facebook API object for user.
 	 * @since  1.0
 	 */
 	protected $user;
 
 	/**
-	* @var    Joomla\Facebook\Status  Facebook API object for status.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Status  Facebook API object for status.
+	 * @since  1.0
+	 */
 	protected $status;
 
 	/**
-	* @var    Jooomla\Facebook\Checkin  Facebook API object for checkin.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Checkin  Facebook API object for checkin.
+	 * @since  1.0
+	 */
 	protected $checkin;
 
 	/**
-	* @var    Joomla\Facebook\Event  Facebook API object for event.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Event  Facebook API object for event.
+	 * @since  1.0
+	 */
 	protected $event;
 
 	/**
-	* @var    Joomla\Facebook\Group  Facebook API object for group.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Group  Facebook API object for group.
+	 * @since  1.0
+	 */
 	protected $group;
 
 	/**
-	* @var    Joomla\Facebook\Link  Facebook API object for link.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Link  Facebook API object for link.
+	 * @since  1.0
+	 */
 	protected $link;
 
 	/**
-	* @var    Joomla\Facebook\Note  Facebook API object for note.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Note  Facebook API object for note.
+	 * @since  1.0
+	 */
 	protected $note;
 
 	/**
-	* @var    Joomla\Facebook\Post  Facebook API object for post.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Post  Facebook API object for post.
+	 * @since  1.0
+	 */
 	protected $post;
 
 	/**
-	* @var    Joomla\Facebook\Comment  Facebook API object for comment.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Comment  Facebook API object for comment.
+	 * @since  1.0
+	 */
 	protected $comment;
 
 	/**
-	* @var    Joomla\Facebook\Photo  Facebook API object for photo.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Photo  Facebook API object for photo.
+	 * @since  1.0
+	 */
 	protected $photo;
 
 	/**
-	* @var    Joomla\Facebook\Video  Facebook API object for video.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Video  Facebook API object for video.
+	 * @since  1.0
+	 */
 	protected $video;
 
 	/**
-	* @var    Joomla\Facebook\Album  Facebook API object for album.
-	* @since  1.0
-	*/
+	 * @var    \Joomla\Facebook\Album  Facebook API object for album.
+	 * @since  1.0
+	 */
 	protected $album;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param   OAuth     $oauth    OAuth client.
-	 * @param   Registry  $options  Facebook options object.
-	 * @param   Http      $client   The HTTP client object.
+	 * @param   OAuth  $oauth    OAuth client.
+	 * @param   array  $options  Facebook options array.
+	 * @param   Http   $client   The HTTP client object.
 	 *
 	 * @since   1.0
 	 */
-	public function __construct(OAuth $oauth = null, Registry $options = null, Http $client = null)
+	public function __construct(OAuth $oauth = null, $options = array(), Http $client = null)
 	{
 		$this->oauth = $oauth;
-		$this->options = isset($options) ? $options : new Registry;
-		$this->client  = isset($client) ? $client : new Http($this->options);
+		$this->options = $options;
+		$this->client  = $client;
 
 		// Setup the default API url if not already set.
-		$this->options->def('api.url', 'https://graph.facebook.com/');
+		if (!isset($this->options['api.url']))
+		{
+			$this->options['api.url'] = 'https://graph.facebook.com/';
+		}
 	}
 
 	/**
@@ -139,9 +141,9 @@ class Facebook
 	 */
 	public function __get($name)
 	{
-		$class = '\\Joomla\\Facebook\\' . ucfirst($name);
+		$class = __NAMESPACE__ . '\\' . ucfirst(strtolower($name));
 
-		if (class_exists($class))
+		if (class_exists($class) && property_exists($this, $name))
 		{
 			if (false == isset($this->$name))
 			{
@@ -165,22 +167,22 @@ class Facebook
 	 */
 	public function getOption($key)
 	{
-		return $this->options->get($key);
+		return isset($this->options[$key]) ? $this->options[$key] : null;
 	}
 
 	/**
 	 * Set an option for the Facebook instance.
 	 *
-	* @param   string  $key    The name of the option to set.
-	* @param   mixed   $value  The option value to set.
-	*
-	* @return  Facebook  This object for method chaining.
-	*
-	* @since   1.0
-	*/
+	 * @param   string  $key    The name of the option to set.
+	 * @param   mixed   $value  The option value to set.
+	 *
+	 * @return  Facebook  This object for method chaining.
+	 *
+	 * @since   1.0
+	 */
 	public function setOption($key, $value)
 	{
-		$this->options->set($key, $value);
+		$this->options[$key] = $value;
 
 		return $this;
 	}

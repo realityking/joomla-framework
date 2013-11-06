@@ -33,10 +33,10 @@ class OAuth2 extends Auth
 	 *
 	 * @since   1.0
 	 */
-	public function __construct(Registry $options = null, Client $client = null)
+	public function __construct(Registry $options, Client $client)
 	{
-		$this->options = isset($options) ? $options : new Registry;
-		$this->client = isset($client) ? $client : new Client($this->options);
+		$this->options = $options;
+		$this->client = $client;
 	}
 
 	/**
@@ -87,7 +87,7 @@ class OAuth2 extends Auth
 	/**
 	 * Method to fill in Google-specific OAuth settings
 	 *
-	 * @return  Client  Google-configured Oauth2 client.
+	 * @return  Client  Google-configured OAuth2 client.
 	 *
 	 * @since   1.0
 	 */

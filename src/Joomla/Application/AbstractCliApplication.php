@@ -20,13 +20,8 @@ use Joomla\Application\Cli\CliOutput;
 abstract class AbstractCliApplication extends AbstractApplication
 {
 	/**
-	 * @var    AbstractCliApplication  The application instance.
+	 * @var    CliOutput  Output object
 	 * @since  1.0
-	 */
-	private static $instance;
-
-	/**
-	 * @var CliOutput
 	 */
 	protected $output;
 
@@ -70,7 +65,9 @@ abstract class AbstractCliApplication extends AbstractApplication
 	/**
 	 * Get an output object.
 	 *
-	 * @return CliOutput
+	 * @return  CliOutput
+	 *
+	 * @since   1.0
 	 */
 	public function getOutput()
 	{

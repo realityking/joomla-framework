@@ -1,6 +1,6 @@
 <?php
 /**
- * Part of the Joomla Framework Logger Package
+ * Part of the Joomla Framework Log Package
  *
  * @copyright  Copyright (C) 2005 - 2013 Open Source Matters, Inc. All rights reserved.
  * @license    GNU General Public License version 2 or later; see LICENSE
@@ -11,7 +11,6 @@ namespace Joomla\Log\Logger;
 use Joomla\Filesystem\Folder;
 use Joomla\Log\AbstractLogger;
 use Joomla\Log\LogEntry;
-use Joomla\Factory;
 
 /**
  * Joomla! Formatted Text File Log class
@@ -54,6 +53,7 @@ class Formattedtext extends AbstractLogger
 	 * @param   array  &$options  Log object options.
 	 *
 	 * @since   1.0
+	 * @throws  \RuntimeException
 	 */
 	public function __construct(array &$options)
 	{
@@ -69,7 +69,9 @@ class Formattedtext extends AbstractLogger
 		// The name of the text file path defaults to that which is set in configuration if not explicitly given.
 		if (empty($this->options['text_file_path']))
 		{
-			$this->options['text_file_path'] = Factory::getConfig()->log_path;
+			throw new \RuntimeException(
+				sprintf('%s requires a `text_file_path` option to be set.', __CLASS__)
+			);
 		}
 
 		// False to treat the log file as a php file.

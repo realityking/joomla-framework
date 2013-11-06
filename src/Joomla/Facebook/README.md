@@ -10,6 +10,7 @@ Instantiating Facebook is easy:
 
 ```php
 use Joomla\Facebook\Facebook;
+
 $facebook = new Facebook;
 ```
 
@@ -17,20 +18,20 @@ This creates a basic Facebook object that can be used to access publicly availab
 
 Sometimes it is necessary to provide an active access token with the required permissions. This can be done by instantiating OAuth.
 
-Create a Facebook application at [https://developers.facebook.com/apps](https://developers.facebook.com/apps) in order to request permissions.
-Instantiate OAuth, passing the Registry options needed. The API key, API secret and callback URL (which is the script's path) from the Facebook application are passed through the Registry object. By default you have to send headers manually in your application, but if you want this to be done automatically you can set Registry's option 'sendheaders' to true.
+Create a Facebook application at [https://developers.facebook.com/apps](https://developers.facebook.com/apps) in order to request permissions. Instantiate OAuth, passing the Registry options needed. The API key, API secret and callback URL (which is the script's path) from the Facebook application are passed through the Registry object. By default you have to send headers manually in your application, but if you want this to be done automatically you can set Registry's option 'sendheaders' to true.
 
 ```php
 use Joomla\Facebook\Facebook;
 use Joomla\Facebook\OAuth;
-use Joomla\Registry\Registry;
 
-$options = new JRegistry;
-$options->set('clientid', $app_id);
-$options->set('clientsecret', $app_secret);
-$options->set('redirecturi', $callback_url);
-$options->set('sendheaders', true);
-$options->set('authmethod', 'get');
+$options = array(
+    'clientid' => $app_id,
+    'clientsecret' => $app_secret,
+    'redirecturi' => $callback_url,
+    'sendheaders' => true,
+    'authmethod' => 'get'
+);
+
 $oauth = new OAuth($options);
 
 $facebook = new Facebook($oauth);
@@ -51,7 +52,7 @@ Set scope to the OAuth object. Scope is a comma separated list of requested perm
 ```php
 $oauth->setScope('read_stream,publish_stream');
 ```
-          
+
 #### Accessing the Facebook API's objects
 
 The Facebook package has 12 objects of the Graph API currently implemented:
@@ -73,7 +74,7 @@ Once a Facebook object has been created, it is simple to use it to access Facebo
 ```php
 $user = $facebook->user->getFeed($user_id);
 ```
-   
+
 This will retrieve an array of Post objects containing (up to) the last 25 posts.
 
 #### A More Complete Example
@@ -83,19 +84,18 @@ Below is an example demonstrating more of the Facebook package.
 ```php
 use Joomla\Facebook\Facebook;
 use Joomla\Facebook\OAuth;
-use Joomla\Registry\Registry;
 
 $app_id = "app_id";
 $app_secret = "app_secret";
 $my_url = 'http://localhost/facebook_test.php';
 
-
-$options = new Registry;
-$options->set('clientid', $app_id);
-$options->set('clientsecret', $app_secret);
-$options->set('redirecturi', $my_url);
-$options->set('sendheaders', true);
-$options->set('authmethod', 'get');
+$options = array(
+    'clientid' => $app_id,
+    'clientsecret' => $app_secret,
+    'redirecturi' => $callback_url,
+    'sendheaders' => true,
+    'authmethod' => 'get'
+);
 
 $oauth = new OAuth($options);
 $oauth->authenticate();

@@ -6,8 +6,7 @@
 
 namespace Joomla\Facebook\Tests;
 
-use Joomla\Facebook\Object;
-use Joomla\Registry\Registry;
+use Joomla\Test\TestHelper;
 
 require_once __DIR__ . '/case/FacebookTestCase.php';
 require_once __DIR__ . '/stubs/ObjectMock.php';
@@ -36,19 +35,19 @@ class ObjectTest extends FacebookTestCase
 		$_SERVER['REQUEST_URI'] = '/index.php';
 		$_SERVER['SCRIPT_NAME'] = '/index.php';
 
-		$this->options = new Registry;
-		$this->client = $this->getMock('\\Joomla\\Http\\Http', array('get', 'post', 'delete', 'put'));
+		$this->options = array();
+		$this->client = $this->getMock('Joomla\\Http\\Http', array('get', 'post', 'delete', 'put'));
 
 		$this->object = new ObjectMock($this->options, $this->client);
 	}
 
 	/**
-	* Provides test data for request format detection.
-	*
-	* @return array
-	*
-	* @since 1.0
-	*/
+	 * Provides test data for request format detection.
+	 *
+	 * @return array
+	 *
+	 * @since 1.0
+	 */
 	public function seedFetchUrl()
 	{
 		// Limit, offset, until, since and expected
@@ -83,7 +82,11 @@ class ObjectTest extends FacebookTestCase
 		$apiUrl = 'https://graph.facebook.com/';
 		$path = '456431243/likes?access_token=235twegsdgsdhtry3tgwgf';
 
-		$this->options->set('api.url', $apiUrl);
+		TestHelper::setValue(
+			$this->object, 'options', array(
+				'api.url' => $apiUrl
+			)
+		);
 
 		$this->assertThat(
 			$this->object->fetchUrl($path, $limit, $offset, $until, $since),

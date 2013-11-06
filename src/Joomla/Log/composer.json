@@ -7,16 +7,18 @@
     "license": "GPL-2.0+",
     "require": {
         "php": ">=5.3.10",
-        "joomla/date": "1.0-beta2",
-        "joomla/filesystem": "1.0-beta2"
+        "joomla/date": "~1.0",
+        "joomla/filesystem": "~1.0"
     },
     "require-dev": {
-        "joomla/database": "1.0-beta2"
+        "joomla/database": "~1.0",
+        "joomla/test": "~1.0"
     },
     "target-dir": "Joomla/Log",
     "autoload": {
-    	"psr-0": {
-    		"Joomla\\Log": ""
-    	}
-    }
+        "psr-0": {
+            "Joomla\\Log": ""
+        }
+    },
+    "minimum-stability": "beta"
 }

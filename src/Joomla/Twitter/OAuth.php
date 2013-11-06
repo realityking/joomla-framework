@@ -8,12 +8,10 @@
 
 namespace Joomla\Twitter;
 
-use Joomla\Oauth1\Client;
-use Joomla\Registry\Registry;
+use Joomla\OAuth1\Client;
 use Joomla\Http\Http;
 use Joomla\Input\Input;
 use Joomla\Application\AbstractWebApplication;
-use \DomainException;
 
 /**
  * Joomla Framework class for generating Twitter API access token.
@@ -23,29 +21,44 @@ use \DomainException;
 class OAuth extends Client
 {
 	/**
-	* @var   Registry Options for the Twitter Oauth object.
-	* @since 1.0
-	*/
+	 * @var    array  Options for the Twitter OAuth object.
+	 * @since  1.0
+	 */
 	protected $options;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param   Registry                $options      JTwitterOauth options object.
+	 * @param   array                   $options      OAuth options array.
 	 * @param   Http                    $client       The HTTP client object.
 	 * @param   Input                   $input        The input object.
 	 * @param   AbstractWebApplication  $application  The application object.
 	 *
 	 * @since 1.0
 	 */
-	public function __construct(Registry $options = null, Http $client = null, Input $input = null, AbstractWebApplication $application = null)
+	public function __construct($options = array(), Http $client, Input $input, AbstractWebApplication $application)
 	{
-		$this->options = isset($options) ? $options : new Registry;
+		$this->options = $options;
 
-		$this->options->def('accessTokenURL', 'https://api.twitter.com/oauth/access_token');
-		$this->options->def('authenticateURL', 'https://api.twitter.com/oauth/authenticate');
-		$this->options->def('authoriseURL', 'https://api.twitter.com/oauth/authorize');
-		$this->options->def('requestTokenURL', 'https://api.twitter.com/oauth/request_token');
+		if (!isset($this->options['accessTokenURL']))
+		{
+			$this->options['accessTokenURL'] = 'https://api.twitter.com/oauth/access_token';
+		}
+
+		if (!isset($this->options['authenticateURL']))
+		{
+			$this->options['authenticateURL'] = 'https://api.twitter.com/oauth/authenticate';
+		}
+
+		if (!isset($this->options['authoriseURL']))
+		{
+			$this->options['authoriseURL'] = 'https://api.twitter.com/oauth/authorize';
+		}
+
+		if (!isset($this->options['requestTokenURL']))
+		{
+			$this->options['requestTokenURL'] = 'https://api.twitter.com/oauth/request_token';
+		}
 
 		// Call the OAuth1 Client constructor to setup the object.
 		parent::__construct($this->options, $client, $input, $application);
@@ -108,13 +121,13 @@ class OAuth extends Client
 	/**
 	 * Method to validate a response.
 	 *
-	 * @param   string         $url       The request URL.
-	 * @param   JHttpResponse  $response  The response to validate.
+	 * @param   string                 $url       The request URL.
+	 * @param   \Joomla\Http\Response  $response  The response to validate.
 	 *
 	 * @return  void
 	 *
 	 * @since  1.0
-	 * @throws DomainException
+	 * @throws \DomainException
 	 */
 	public function validateResponse($url, $response)
 	{
@@ -124,12 +137,12 @@ class OAuth extends Client
 
 			if (property_exists($error, 'error'))
 			{
-				throw new DomainException($error->error);
+				throw new \DomainException($error->error);
 			}
 			else
 			{
 				$error = $error->errors;
-				throw new DomainException($error[0]->message, $error[0]->code);
+				throw new \DomainException($error[0]->message, $error[0]->code);
 			}
 		}
 	}

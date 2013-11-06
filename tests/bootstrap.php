@@ -18,13 +18,9 @@ ini_set('display_errors', 1);
  * Ensure that required path constants are defined.  These can be overridden within the phpunit.xml file
  * if you chose to create a custom version of that file.
  */
-if (!defined('JPATH_TESTS'))
-{
-	define('JPATH_TESTS', realpath(__DIR__));
-}
 if (!defined('JPATH_ROOT'))
 {
-	define('JPATH_ROOT', realpath(JPATH_TESTS . '/tmp'));
+	define('JPATH_ROOT', realpath(__DIR__));
 }
 
 // Search for the Composer autoload file
@@ -34,12 +30,6 @@ if (file_exists($composerAutoload))
 {
 	include_once $composerAutoload;
 }
-
-// Import the platform.
-require_once dirname(__DIR__) . '/src/import.php';
-
-// Register the core Joomla test classes.
-JLoader::registerPrefix('Test', __DIR__ . '/core');
 
 /*
  * The PHP garbage collector can be too aggressive in closing circular references before they are no longer needed.  This can cause

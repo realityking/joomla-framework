@@ -8,9 +8,8 @@
 
 namespace Joomla\Facebook;
 
-use Joomla\Test\WebInspector;
-use Joomla\Oauth2\Client;
-use Joomla\Registry\Registry;
+use Joomla\Application\AbstractWebApplication;
+use Joomla\OAuth2\Client;
 use Joomla\Http\Http;
 use Joomla\Input\Input;
 
@@ -22,7 +21,7 @@ use Joomla\Input\Input;
 class OAuth extends Client
 {
 	/**
-	 * @var Joomla\Registry\Registry Options for the OAuth object.
+	 * @var   array  Options for the OAuth object.
 	 * @since 1.0
 	 */
 	protected $options;
@@ -30,22 +29,29 @@ class OAuth extends Client
 	/**
 	 * Constructor.
 	 *
-	 * @param   Registry      $options      JFacebookOauth options object.
-	 * @param   Http          $client       The HTTP client object.
-	 * @param   Input         $input        The input object.
-	 * @param   WebInspector  $application  The application object.
+	 * @param   array                   $options      OAuth options array.
+	 * @param   Http                    $client       The HTTP client object.
+	 * @param   Input                   $input        The input object.
+	 * @param   AbstractWebApplication  $application  The application object.
 	 *
 	 * @since   1.0
 	 */
-	public function __construct(Registry $options = null, Http $client = null, Input $input = null, WebInspector $application = null)
+	public function __construct($options, Http $client, Input $input, AbstractWebApplication $application)
 	{
-		$this->options = isset($options) ? $options : new Registry;
+		$this->options = $options;
 
 		// Setup the authentication and token urls if not already set.
-		$this->options->def('authurl', 'http://www.facebook.com/dialog/oauth');
-		$this->options->def('tokenurl', 'https://graph.facebook.com/oauth/access_token');
+		if (!isset($this->options['authurl']))
+		{
+			$this->options['authurl'] = 'http://www.facebook.com/dialog/oauth';
+		}
 
-		// Call the Joomla\Oauth2\Client constructor to setup the object.
+		if (!isset($this->options['tokenurl']))
+		{
+			$this->options['tokenurl'] = 'https://graph.facebook.com/oauth/access_token';
+		}
+
+		// Call the \Joomla\OAuth2\Client constructor to setup the object.
 		parent::__construct($this->options, $client, $input, $application);
 	}
 

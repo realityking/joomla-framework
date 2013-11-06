@@ -8,13 +8,12 @@
 
 namespace Joomla\Linkedin;
 
-use Joomla\Oauth1\Client;
+use Joomla\OAuth1\Client;
 use Joomla\Registry\Registry;
 use Joomla\Http\Http;
 use Joomla\Http\Response;
 use Joomla\Input\Input;
 use Joomla\Application\AbstractWebApplication;
-use \DomainException;
 
 /**
  * Joomla Framework class for generating Linkedin API access token.
@@ -24,9 +23,9 @@ use \DomainException;
 class OAuth extends Client
 {
 	/**
-	* @var    Registry  Options for the JLinkedinOauth object.
-	* @since  1.0
-	*/
+	 * @var    Registry  Options for the \Joomla\Linkedin\OAuth object.
+	 * @since  1.0
+	 */
 	protected $options;
 
 	/**
@@ -39,16 +38,16 @@ class OAuth extends Client
 	 *
 	 * @since 1.0
 	 */
-	public function __construct(Registry $options = null, Http $client = null, Input $input = null, AbstractWebApplication $application = null)
+	public function __construct(Registry $options, Http $client, Input $input, AbstractWebApplication $application)
 	{
-		$this->options = isset($options) ? $options : new Registry;
+		$this->options = $options;
 
 		$this->options->def('accessTokenURL', 'https://www.linkedin.com/uas/oauth/accessToken');
 		$this->options->def('authenticateURL', 'https://www.linkedin.com/uas/oauth/authenticate');
 		$this->options->def('authoriseURL', 'https://www.linkedin.com/uas/oauth/authorize');
 		$this->options->def('requestTokenURL', 'https://www.linkedin.com/uas/oauth/requestToken');
 
-		// Call the Oauth1 Client constructor to setup the object.
+		// Call the OAuth1 Client constructor to setup the object.
 		parent::__construct($this->options, $client, $input, $application);
 	}
 
@@ -96,7 +95,7 @@ class OAuth extends Client
 	 * @return  void
 	 *
 	 * @since  1.0
-	 * @throws DomainException
+	 * @throws \DomainException
 	 */
 	public function validateResponse($url, $response)
 	{
@@ -109,11 +108,11 @@ class OAuth extends Client
 		{
 			if ($error = json_decode($response->body))
 			{
-				throw new DomainException('Error code ' . $error->errorCode . ' received with message: ' . $error->message . '.');
+				throw new \DomainException('Error code ' . $error->errorCode . ' received with message: ' . $error->message . '.');
 			}
 			else
 			{
-				throw new DomainException($response->body);
+				throw new \DomainException($response->body);
 			}
 		}
 	}
